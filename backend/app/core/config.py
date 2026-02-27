@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     RAZORPAY_WEBHOOK_SECRET: str = Field(...)
     SUBSCRIPTION_DURATION_DAYS: int = 30
 
+    TELEGRAM_BOT_TOKEN: str | None = None
+    TELEGRAM_CHAT_ID: str | None = None
+
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == 'production'
