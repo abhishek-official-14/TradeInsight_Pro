@@ -67,3 +67,8 @@ class OptionsAnalyticsResponse(BaseModel):
     strongest_support: float | None
     strongest_resistance: float | None
     max_pain: float | None
+
+
+class AISignalEngineResponse(BaseModel):
+    score: int
+    classification: str
