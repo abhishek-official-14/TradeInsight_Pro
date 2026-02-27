@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import dataclass
 
 import requests
@@ -11,8 +12,10 @@ NSE_BASE_URL = 'https://www.nseindia.com'
 NIFTY_50_INDEX = 'NIFTY 50'
 WEIGHTS_CACHE_KEY = 'nifty:50:weights'
 LIVE_CACHE_KEY = 'nifty:50:live'
+SECTOR_HEATMAP_CACHE_KEY = 'nifty:50:sector_heatmap'
 WEIGHTS_CACHE_SECONDS = 15 * 60
 LIVE_CACHE_SECONDS = 5 * 60
+SECTOR_HEATMAP_CACHE_SECONDS = 5 * 60
 
 
 @dataclass
@@ -76,6 +79,41 @@ class NiftyAnalyticsService:
             'constituents': [self._to_dict(row) for row in constituents],
         }
 
+    def get_sector_impact_heatmap(self) -> dict[str, float]:
+        cached = redis_client.get(SECTOR_HEATMAP_CACHE_KEY)
+        if cached:
+            return json.loads(cached)
+
+        weights = self._get_weights()
+        live_changes = self._get_live_changes()
+
+        sector_impact: dict[str, float] = {}
+        for symbol, weight_payload in weights.items():
+            live_payload = live_changes.get(symbol)
+            if live_payload is None:
+                continue
+
+            sector = weight_payload.get('sector', 'OTHERS')
+            impact = weight_payload['weight'] * live_payload['percent_change']
+            sector_impact[sector] = sector_impact.get(sector, 0.0) + impact
+
+        if not sector_impact:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail='Nifty sector impact unavailable',
+            )
+
+        rounded_payload = {
+            sector: round(impact, 6)
+            for sector, impact in sorted(sector_impact.items(), key=lambda row: row[0])
+        }
+        redis_client.set(
+            SECTOR_HEATMAP_CACHE_KEY,
+            json.dumps(rounded_payload),
+            ex=SECTOR_HEATMAP_CACHE_SECONDS,
+        )
+        return rounded_payload
+
     def _to_dict(self, row: NiftyConstituent) -> dict:
         return {
             'symbol': row.symbol,
@@ -105,6 +143,7 @@ class NiftyAnalyticsService:
             weights[symbol] = {
                 'company_name': str(item.get('meta', {}).get('companyName') or symbol),
                 'weight': weight,
+                'sector': self._extract_sector(item),
             }
 
         if not weights:
@@ -178,3 +217,48 @@ class NiftyAnalyticsService:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    def _extract_sector(self, item: dict) -> str:
+        sector_sources = [
+            item.get('meta', {}).get('industry'),
+            item.get('meta', {}).get('sector'),
+            item.get('industry'),
+            item.get('sector'),
+        ]
+        for source in sector_sources:
+            normalized = self._normalize_sector(source)
+            if normalized:
+                return normalized
+        return 'OTHERS'
+
+    def _normalize_sector(self, sector_name: object) -> str | None:
+        if not sector_name:
+            return None
+
+        cleaned = re.sub(r'[^A-Za-z0-9 ]+', ' ', str(sector_name)).upper()
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        if not cleaned:
+            return None
+
+        if 'BANK' in cleaned:
+            return 'BANKING'
+        if 'INFORMATION TECHNOLOGY' in cleaned or cleaned == 'IT':
+            return 'IT'
+        if 'AUTO' in cleaned:
+            return 'AUTO'
+        if 'PHARMA' in cleaned or 'HEALTHCARE' in cleaned:
+            return 'PHARMA'
+        if 'FMCG' in cleaned or 'CONSUMER' in cleaned:
+            return 'FMCG'
+        if 'OIL' in cleaned or 'GAS' in cleaned or 'ENERGY' in cleaned:
+            return 'ENERGY'
+        if 'METAL' in cleaned or 'MINING' in cleaned:
+            return 'METALS'
+        if 'TELECOM' in cleaned:
+            return 'TELECOM'
+        if 'REALTY' in cleaned or 'REAL ESTATE' in cleaned:
+            return 'REALTY'
+        if 'POWER' in cleaned or 'UTILITY' in cleaned:
+            return 'UTILITIES'
+
+        return cleaned.replace(' ', '_')
