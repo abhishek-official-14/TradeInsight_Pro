@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.user import User, UserRole
+from app.core.security import TokenType
 from app.repositories.user_repository import UserRepository
 
 settings = get_settings()
@@ -27,7 +28,8 @@ def get_current_user(db: DbSession, token: Annotated[str, Depends(oauth2_scheme)
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         subject = payload.get('sub')
-        if not isinstance(subject, str):
+        token_type = payload.get('type')
+        if not isinstance(subject, str) or token_type != TokenType.ACCESS:
             raise credentials_exception
     except JWTError as exc:
         raise credentials_exception from exc
