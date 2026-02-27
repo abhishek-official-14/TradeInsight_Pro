@@ -51,3 +51,19 @@ class NiftyImpactResponse(BaseModel):
 
 class SectorImpactHeatmapResponse(RootModel[dict[str, float]]):
     pass
+
+
+class OptionsAnalyticsResponse(BaseModel):
+    symbol: str
+    expiry_date: str
+    underlying_value: float | None
+    timestamp: datetime
+    total_call_oi: int
+    total_put_oi: int
+    pcr: float | None
+    change_in_call_oi: int
+    change_in_put_oi: int
+    change_oi_pcr: float | None
+    strongest_support: float | None
+    strongest_resistance: float | None
+    max_pain: float | None
