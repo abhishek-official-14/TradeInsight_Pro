@@ -4,6 +4,7 @@ from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.database import Base, engine
 from app.core.logging import LoggingMiddleware, configure_logging
+from app.core.subscription_middleware import SubscriptionAccessMiddleware
 from app.core.token_middleware import TokenValidationMiddleware
 from app.utils.error_middleware import ErrorHandlingMiddleware
 
@@ -14,6 +15,7 @@ app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 app.add_middleware(ErrorHandlingMiddleware)
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(TokenValidationMiddleware)
+app.add_middleware(SubscriptionAccessMiddleware)
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 

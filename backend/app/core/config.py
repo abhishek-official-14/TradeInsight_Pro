@@ -29,6 +29,11 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = 'INFO'
 
+    RAZORPAY_KEY_ID: str = Field(...)
+    RAZORPAY_KEY_SECRET: str = Field(...)
+    RAZORPAY_WEBHOOK_SECRET: str = Field(...)
+    SUBSCRIPTION_DURATION_DAYS: int = 30
+
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == 'production'
@@ -47,7 +52,6 @@ class ProductionSettings(Settings):
 
 
 @lru_cache
-
 def get_settings() -> Settings:
     base_settings = Settings()
     if base_settings.APP_ENV == 'production':
