@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import get_settings
 
@@ -17,4 +18,11 @@ celery_app.conf.update(
     timezone='UTC',
     enable_utc=True,
     imports=('app.tasks.market_tasks',),
+    beat_schedule={
+        'monitor-market-alerts-every-minute': {
+            'task': 'tasks.monitor_market_alerts',
+            'schedule': crontab(),
+            'args': ('NIFTY',),
+        },
+    },
 )

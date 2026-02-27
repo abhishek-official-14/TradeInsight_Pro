@@ -12,3 +12,8 @@ def cache_market_heartbeat() -> str:
 @celery_app.task(name='tasks.generate_ai_trading_signal')
 def generate_ai_trading_signal(symbol: str = 'NIFTY') -> dict:
     return AISignalEngineService().generate_signal(symbol=symbol)
+
+
+@celery_app.task(name='tasks.monitor_market_alerts')
+def monitor_market_alerts(symbol: str = 'NIFTY') -> dict:
+    return AISignalEngineService().generate_signal(symbol=symbol)
