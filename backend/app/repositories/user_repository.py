@@ -25,8 +25,24 @@ class UserRepository(BaseRepository[User]):
     def list_all(self) -> list[User]:
         return list(self.db.scalars(select(User).order_by(User.created_at.desc())).all())
 
+    def list_with_telegram_id(self) -> list[User]:
+        return list(
+            self.db.scalars(
+                select(User)
+                .where(User.telegram_id.is_not(None))
+                .order_by(User.id.asc())
+            ).all()
+        )
+
     def update_role(self, user: User, role: UserRole) -> User:
         user.role = role
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def update_telegram_id(self, user: User, telegram_id: str) -> User:
+        user.telegram_id = telegram_id
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)

@@ -1,12 +1,15 @@
 import json
 from datetime import datetime
 
+from app.core.database import SessionLocal
+from app.repositories.user_repository import UserRepository
 from app.services.options_analytics_service import OptionsAnalyticsService
 from app.utils.redis_client import redis_client
-from app.utils.telegram_client import send_telegram_message
+from app.utils.telegram_client import send_bulk_telegram_messages
 
 AI_SIGNAL_CACHE_PREFIX = 'ai:signal'
 AI_SIGNAL_CLASSIFICATION_CACHE_PREFIX = 'ai:signal:classification'
+AI_ALERT_STATE_CACHE_PREFIX = 'ai:alert:state'
 AI_SIGNAL_CACHE_SECONDS = 60
 
 
@@ -57,28 +60,117 @@ class AISignalEngineService:
             'generated_at': datetime.utcnow().isoformat(),
         }
         redis_client.set(self._cache_key(normalized_symbol), json.dumps(signal_payload), ex=AI_SIGNAL_CACHE_SECONDS)
-        self._alert_on_classification_change(normalized_symbol, classification, score)
+        self._process_alerts(
+            symbol=normalized_symbol,
+            analytics=analytics,
+            classification=classification,
+            score=score,
+        )
         return signal_payload
 
-    def _alert_on_classification_change(self, symbol: str, classification: str, score: int) -> None:
+    def _process_alerts(self, *, symbol: str, analytics: dict, classification: str, score: int) -> None:
+        chat_ids = self._linked_chat_ids()
+        if not chat_ids:
+            return
+
+        self._alert_on_classification_change(symbol, classification, score, chat_ids)
+        self._alert_on_pcr_extreme(symbol, analytics.get('pcr'), chat_ids)
+        self._alert_on_support_break(
+            symbol,
+            analytics.get('underlying_value'),
+            analytics.get('strongest_support'),
+            chat_ids,
+        )
+        self._alert_on_resistance_break(
+            symbol,
+            analytics.get('underlying_value'),
+            analytics.get('strongest_resistance'),
+            chat_ids,
+        )
+
+    def _linked_chat_ids(self) -> list[str]:
+        db = SessionLocal()
+        try:
+            users = UserRepository(db).list_with_telegram_id()
+            return [user.telegram_id for user in users if user.telegram_id]
+        finally:
+            db.close()
+
+    def _alert_on_classification_change(self, symbol: str, classification: str, score: int, chat_ids: list[str]) -> None:
         classification_key = self._classification_key(symbol)
         previous = redis_client.get(classification_key)
         if previous and previous != classification:
-            send_telegram_message(
+            send_bulk_telegram_messages(
+                chat_ids,
                 (
                     f'📈 AI Trading Signal Changed for {symbol}\n'
                     f'Previous: {previous}\n'
                     f'Current: {classification}\n'
                     f'Score: {score}'
-                )
+                ),
             )
         redis_client.set(classification_key, classification)
+
+    def _alert_on_pcr_extreme(self, symbol: str, pcr: float | None, chat_ids: list[str]) -> None:
+        if pcr is None:
+            return
+        state_key = self._alert_state_key(symbol, 'pcr_extreme')
+        is_extreme = pcr >= 1.3 or pcr <= 0.7
+        previous_state = redis_client.get(state_key) == '1'
+        if is_extreme and not previous_state:
+            direction = 'Bullish Extreme' if pcr >= 1.3 else 'Bearish Extreme'
+            send_bulk_telegram_messages(
+                chat_ids,
+                f'⚠️ PCR Extreme for {symbol}\nPCR: {pcr}\nState: {direction}',
+            )
+        redis_client.set(state_key, '1' if is_extreme else '0')
+
+    def _alert_on_support_break(
+        self,
+        symbol: str,
+        underlying: float | None,
+        support: float | None,
+        chat_ids: list[str],
+    ) -> None:
+        if underlying is None or support is None:
+            return
+        state_key = self._alert_state_key(symbol, 'support_break')
+        is_broken = underlying < support
+        previous_state = redis_client.get(state_key) == '1'
+        if is_broken and not previous_state:
+            send_bulk_telegram_messages(
+                chat_ids,
+                f'🔻 Support Break for {symbol}\nUnderlying: {underlying}\nSupport: {support}',
+            )
+        redis_client.set(state_key, '1' if is_broken else '0')
+
+    def _alert_on_resistance_break(
+        self,
+        symbol: str,
+        underlying: float | None,
+        resistance: float | None,
+        chat_ids: list[str],
+    ) -> None:
+        if underlying is None or resistance is None:
+            return
+        state_key = self._alert_state_key(symbol, 'resistance_break')
+        is_broken = underlying > resistance
+        previous_state = redis_client.get(state_key) == '1'
+        if is_broken and not previous_state:
+            send_bulk_telegram_messages(
+                chat_ids,
+                f'🚀 Resistance Break for {symbol}\nUnderlying: {underlying}\nResistance: {resistance}',
+            )
+        redis_client.set(state_key, '1' if is_broken else '0')
 
     def _cache_key(self, symbol: str) -> str:
         return f'{AI_SIGNAL_CACHE_PREFIX}:{symbol}'
 
     def _classification_key(self, symbol: str) -> str:
         return f'{AI_SIGNAL_CLASSIFICATION_CACHE_PREFIX}:{symbol}'
+
+    def _alert_state_key(self, symbol: str, alert_type: str) -> str:
+        return f'{AI_ALERT_STATE_CACHE_PREFIX}:{symbol}:{alert_type}'
 
     def _score_pcr(self, pcr: float | None) -> float:
         if pcr is None:
