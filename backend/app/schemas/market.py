@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 
 class NiftySnapshotRead(BaseModel):
@@ -47,3 +47,7 @@ class NiftyImpactResponse(BaseModel):
     total_impact: float
     top_draggers: list[NiftyConstituentImpact]
     constituents: list[NiftyConstituentImpact]
+
+
+class SectorImpactHeatmapResponse(RootModel[dict[str, float]]):
+    pass

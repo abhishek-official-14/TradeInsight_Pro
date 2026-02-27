@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.market import NiftyImpactResponse, NiftySnapshotRead
+from app.schemas.market import (
+    NiftyImpactResponse,
+    NiftySnapshotRead,
+    SectorImpactHeatmapResponse,
+)
 from app.services.market_service import MarketService
 from app.services.nifty_analytics_service import NiftyAnalyticsService
 
@@ -28,3 +32,12 @@ def nifty_impact(
     _ = current_user
     payload = NiftyAnalyticsService().get_impact_snapshot()
     return NiftyImpactResponse.model_validate(payload)
+
+
+@router.get('/impact/sector-heatmap', response_model=SectorImpactHeatmapResponse)
+def sector_impact_heatmap(
+    current_user: User = Depends(get_current_user),
+) -> SectorImpactHeatmapResponse:
+    _ = current_user
+    payload = NiftyAnalyticsService().get_sector_impact_heatmap()
+    return SectorImpactHeatmapResponse.model_validate(payload)
