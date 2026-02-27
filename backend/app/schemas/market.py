@@ -31,3 +31,19 @@ class AISignalRead(BaseModel):
     generated_at: datetime
 
     model_config = {'from_attributes': True}
+
+
+class NiftyConstituentImpact(BaseModel):
+    symbol: str
+    company_name: str
+    weight: float
+    last_price: float
+    percent_change: float
+    impact: float
+
+
+class NiftyImpactResponse(BaseModel):
+    index: str
+    total_impact: float
+    top_draggers: list[NiftyConstituentImpact]
+    constituents: list[NiftyConstituentImpact]
