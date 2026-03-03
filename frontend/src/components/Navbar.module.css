@@ -1,0 +1,38 @@
+.navShell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #1a2a45;
+  background: rgba(7, 11, 20, 0.86);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.brand span {
+  color: var(--primary);
+}
+
+.navLinks {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.navLinks a {
+  color: var(--muted);
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+}
+
+.navLinks a.active {
+  color: var(--text);
+  background: #182a4b;
+}

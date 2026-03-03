@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '../layouts/AppLayout';
 import { AdminPanelPage } from '../pages/AdminPanelPage';
+import { AdminSubscriptionsPage } from '../pages/AdminSubscriptionsPage';
 import { ApiUsageLogsPage } from '../pages/ApiUsageLogsPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { FeatureFlagsPage } from '../pages/FeatureFlagsPage';
@@ -15,6 +16,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 
 export const AppRoutes = () => (
   <Routes>
+    <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
 
@@ -37,6 +39,7 @@ export const AppRoutes = () => (
     <Route element={<ProtectedRoute roles={['admin']} />}>
       <Route element={<AppLayout />}>
         <Route path="/admin" element={<AdminPanelPage />} />
+        <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
         <Route path="/admin/api-usage-logs" element={<ApiUsageLogsPage />} />
         <Route path="/admin/feature-flags" element={<FeatureFlagsPage />} />
       </Route>

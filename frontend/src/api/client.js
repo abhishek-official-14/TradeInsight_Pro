@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ENV } from '../utils/env';
-import { clearStoredAuth, getStoredAuth } from '../utils/storage';
+import { clearStoredAuth, getStoredAuth, setStoredAuth } from '../utils/storage';
 
 /**
  * Normalized API error with useful metadata.
@@ -43,6 +43,34 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
+const refreshClient = axios.create({
+  baseURL: ENV.API_BASE_URL,
+  timeout: 15000,
+});
+
+let refreshPromise = null;
+
+const refreshAccessToken = async () => {
+  const auth = getStoredAuth();
+  const refreshToken = auth?.refreshToken || auth?.refresh_token;
+
+  if (!refreshToken) {
+    throw new Error('Missing refresh token');
+  }
+
+  const response = await refreshClient.post('/auth/refresh', { refresh_token: refreshToken });
+  const tokenPayload = response.data;
+
+  const updatedAuth = {
+    ...auth,
+    token: tokenPayload?.access_token || auth?.token,
+    refreshToken: tokenPayload?.refresh_token || refreshToken,
+  };
+
+  setStoredAuth(updatedAuth);
+  return updatedAuth;
+};
+
 apiClient.interceptors.request.use((config) => {
   const auth = getStoredAuth();
   const token = auth?.token || auth?.access_token;
@@ -56,7 +84,30 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error?.config;
+
+    if (error?.response?.status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true;
+
+      try {
+        refreshPromise = refreshPromise || refreshAccessToken();
+        const updatedAuth = await refreshPromise;
+        refreshPromise = null;
+
+        originalRequest.headers = {
+          ...(originalRequest.headers || {}),
+          Authorization: `Bearer ${updatedAuth.token}`,
+        };
+
+        return apiClient(originalRequest);
+      } catch {
+        refreshPromise = null;
+        clearStoredAuth();
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+      }
+    }
+
     if (error?.response?.status === 401) {
       clearStoredAuth();
       window.dispatchEvent(new CustomEvent('auth:logout'));

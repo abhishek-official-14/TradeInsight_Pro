@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { userApi } from '../api/userApi';
+import styles from './TelegramSettingsPage.module.css';
 
 export const TelegramSettingsPage = () => {
   const [telegramId, setTelegramId] = useState('');
@@ -47,7 +48,7 @@ export const TelegramSettingsPage = () => {
   };
 
   return (
-    <section className="panel" style={{ maxWidth: 680 }}>
+    <section className={`panel ${styles.container}`}>
       <div className="panel-head">
         <h2>Telegram Settings</h2>
         <span className="metric-hint">Alert delivery</span>
@@ -58,7 +59,7 @@ export const TelegramSettingsPage = () => {
       {success && <p className="success-text">{success}</p>}
 
       {!loading && (
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.8rem', marginTop: '1rem' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <label htmlFor="telegram-id" className="metric-hint">Telegram Chat ID</label>
           <input
             id="telegram-id"
@@ -67,7 +68,7 @@ export const TelegramSettingsPage = () => {
             value={telegramId}
             onChange={(event) => setTelegramId(event.target.value)}
             required
-            style={{ background: '#0f1a2d', color: 'var(--text)', borderColor: '#1b355f' }}
+            className={styles.input}
           />
           <small className="metric-hint">
             Current linked ID: <strong>{currentTelegramId || 'Not linked'}</strong>

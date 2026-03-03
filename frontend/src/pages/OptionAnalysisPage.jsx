@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { optionsApi } from '../api/optionsApi';
+import styles from './OptionAnalysisPage.module.css';
 
 export const OptionAnalysisPage = () => {
   const [contracts, setContracts] = useState([]);
@@ -49,7 +50,7 @@ export const OptionAnalysisPage = () => {
 
       {!loading && !error && (
         <>
-          <div style={{ marginBottom: 12 }}>
+          <div className={styles.summary}>
             <p>
               Put/Call Ratio: <strong>{analytics?.pcr ?? '—'}</strong>
             </p>

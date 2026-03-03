@@ -6,6 +6,8 @@ import { DraggersList } from '../components/DraggersList';
 import { MetricCard } from '../components/MetricCard';
 import { SectorHeatmap } from '../components/SectorHeatmap';
 import { StrengthMeter } from '../components/StrengthMeter';
+import { useAuth } from '../context/AuthContext';
+import styles from './DashboardPage.module.css';
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -18,7 +20,7 @@ const sentimentTone = (sentiment) => {
 const SkeletonCard = () => (
   <article className="metric-card neutral" aria-busy="true">
     <p className="metric-title">Loading…</p>
-    <div style={{ width: '55%', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.08)' }} />
+    <div className={styles.skeletonBlock} />
     <span className="metric-hint">Fetching latest market data</span>
   </article>
 );
@@ -31,6 +33,8 @@ const SkeletonPanel = ({ title }) => (
 );
 
 export const DashboardPage = () => {
+  const { role } = useAuth();
+  const canViewAiSignals = role === 'pro' || role === 'admin';
   const [data, setData] = useState({
     niftyImpact: null,
     latestPrice: null,
@@ -61,11 +65,10 @@ export const DashboardPage = () => {
     });
     setError('');
 
-    const [impactResult, latestResult, aiSignalResult, draggersResult, sectorsResult, freeResult] = await Promise.allSettled([
+    const [impactResult, latestResult, aiSignalResult, sectorsResult, freeResult] = await Promise.allSettled([
       niftyApi.getImpact(),
       niftyApi.getLatest(),
-      aiSignalApi.getLatest(),
-      niftyApi.getImpact(),
+      canViewAiSignals ? aiSignalApi.getLatest() : Promise.resolve(null),
       niftyApi.getSectorHeatmap(),
       protectedApi.getFreeMessage(),
     ]);
@@ -81,13 +84,13 @@ export const DashboardPage = () => {
         next.latestPrice = latestResult.value?.price ?? null;
       }
 
-      if (aiSignalResult.status === 'fulfilled') {
+      if (canViewAiSignals && aiSignalResult.status === 'fulfilled') {
         next.aiStrength = aiSignalResult.value?.score ?? null;
         next.sentiment = aiSignalResult.value?.classification || 'Unavailable';
       }
 
-      if (draggersResult.status === 'fulfilled') {
-        next.draggers = (draggersResult.value?.top_draggers ?? []).slice(0, 5);
+      if (impactResult.status === 'fulfilled') {
+        next.draggers = (impactResult.value?.top_draggers ?? []).slice(0, 5);
       }
 
       if (sectorsResult.status === 'fulfilled') {
@@ -101,7 +104,10 @@ export const DashboardPage = () => {
       return next;
     });
 
-    const results = [impactResult, latestResult, aiSignalResult, draggersResult, sectorsResult, freeResult];
+    const results = [impactResult, latestResult, sectorsResult, freeResult];
+    if (canViewAiSignals) {
+      results.push(aiSignalResult);
+    }
     if (results.every((result) => result.status === 'rejected')) {
       setError('Unable to load dashboard data right now.');
     }
@@ -114,7 +120,7 @@ export const DashboardPage = () => {
       sectors: false,
       greeting: false,
     });
-  }, []);
+  }, [canViewAiSignals]);
 
   useEffect(() => {
     loadDashboard();
@@ -136,12 +142,12 @@ export const DashboardPage = () => {
   return (
     <section className="dashboard-grid">
       {error ? (
-        <article className="panel" style={{ gridColumn: 'span 12' }}>
+        <article className={`panel ${styles.fullWidth}`}>
           <p className="error-text">{error}</p>
         </article>
       ) : null}
       {!loading.greeting && data.greeting ? (
-        <article className="panel" style={{ gridColumn: 'span 12' }}>
+        <article className={`panel ${styles.fullWidth}`}>
           <p>{data.greeting}</p>
         </article>
       ) : null}
@@ -173,13 +179,13 @@ export const DashboardPage = () => {
       ) : (
         <MetricCard
           title="Market Sentiment"
-          value={data.sentiment}
+          value={canViewAiSignals ? data.sentiment : 'Upgrade to Pro'}
           tone={sentimentTone(data.sentiment)}
-          hint="Color-coded AI interpretation"
+          hint={canViewAiSignals ? 'Color-coded AI interpretation' : 'AI sentiment is available for Pro members'}
         />
       )}
 
-      {loading.aiSignal ? <SkeletonPanel title="AI Strength Meter" /> : <StrengthMeter value={data.aiStrength ?? 0} />}
+      {loading.aiSignal ? <SkeletonPanel title="AI Strength Meter" /> : <StrengthMeter value={canViewAiSignals ? data.aiStrength ?? 0 : 0} />}
       {loading.draggers ? <SkeletonPanel title="Top 5 Draggers" /> : <DraggersList items={data.draggers} />}
       {loading.sectors ? <SkeletonPanel title="Sector Heatmap" /> : <SectorHeatmap sectors={data.sectors} />}
     </section>
