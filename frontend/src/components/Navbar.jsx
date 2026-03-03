@@ -17,6 +17,7 @@ export const Navbar = () => {
           <NavLink to="/pro-analytics">Pro Analytics</NavLink>
         )}
         <NavLink to="/subscription">Subscription</NavLink>
+        <NavLink to="/design-system">Design System</NavLink>
         <NavLink to="/profile">Profile</NavLink>
         <NavLink to="/settings/telegram">Telegram Settings</NavLink>
         {user?.role === 'admin' && <NavLink to="/admin">Admin Panel</NavLink>}
