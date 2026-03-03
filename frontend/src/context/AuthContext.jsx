@@ -109,6 +109,19 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
+
+  const refreshUser = async () => {
+    if (!auth?.token) {
+      return null;
+    }
+
+    const profile = await authApi.me();
+    const updated = withResolvedRole({ ...auth, user: { ...profile, role: resolveRole(profile?.role, auth.token) } });
+    setAuth(updated);
+    setStoredAuth(updated);
+    return updated.user;
+  };
+
   const logout = () => {
     setAuth(null);
     clearStoredAuth();
@@ -133,6 +146,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
+      refreshUser,
     }),
     [auth, loading]
   );
