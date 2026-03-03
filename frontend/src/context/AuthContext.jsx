@@ -29,13 +29,24 @@ export const AuthProvider = ({ children }) => {
     };
 
     hydrate();
+
+    const handleAutoLogout = () => {
+      setAuth(null);
+      clearStoredAuth();
+    };
+
+    window.addEventListener('auth:logout', handleAutoLogout);
+    return () => {
+      window.removeEventListener('auth:logout', handleAutoLogout);
+    };
   }, []);
 
   const login = async (payload) => {
     const result = await authApi.login(payload);
     const normalized = {
       token: result.access_token || result.token,
-      user: result.user || { email: payload.email, role: result.role || 'user' },
+      refreshToken: result.refresh_token || null,
+      user: result.user || { email: payload.email, role: result.role || 'free' },
     };
     setAuth(normalized);
     setStoredAuth(normalized);
