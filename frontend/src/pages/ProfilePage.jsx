@@ -6,9 +6,15 @@ export const ProfilePage = () => {
   return (
     <section className="panel">
       <h2>Profile</h2>
-      <p>Name: <strong>{user?.name || 'Trader'}</strong></p>
-      <p>Email: <strong>{user?.email || 'Not available'}</strong></p>
-      <p>Role: <strong>{user?.role || 'user'}</strong></p>
+      <p>
+        Name: <strong>{user?.full_name || 'Trader'}</strong>
+      </p>
+      <p>
+        Email: <strong>{user?.email || 'Not available'}</strong>
+      </p>
+      <p>
+        Role: <strong>{user?.role || 'free'}</strong>
+      </p>
     </section>
   );
 };

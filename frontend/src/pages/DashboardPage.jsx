@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { aiSignalApi } from '../api/aiSignalApi';
 import { niftyApi } from '../api/niftyApi';
+import { protectedApi } from '../api/protectedApi';
 import { DraggersList } from '../components/DraggersList';
 import { MetricCard } from '../components/MetricCard';
 import { SectorHeatmap } from '../components/SectorHeatmap';
@@ -32,31 +33,41 @@ const SkeletonPanel = ({ title }) => (
 export const DashboardPage = () => {
   const [data, setData] = useState({
     niftyImpact: null,
+    latestPrice: null,
     sentiment: 'Unavailable',
     aiStrength: null,
     draggers: [],
     sectors: [],
+    greeting: '',
   });
   const [loading, setLoading] = useState({
     niftyImpact: true,
+    latest: true,
     aiSignal: true,
     draggers: true,
     sectors: true,
+    greeting: true,
   });
+  const [error, setError] = useState('');
 
   const loadDashboard = useCallback(async () => {
     setLoading({
       niftyImpact: true,
+      latest: true,
       aiSignal: true,
       draggers: true,
       sectors: true,
+      greeting: true,
     });
+    setError('');
 
-    const [impactResult, aiSignalResult, draggersResult, sectorsResult] = await Promise.allSettled([
+    const [impactResult, latestResult, aiSignalResult, draggersResult, sectorsResult, freeResult] = await Promise.allSettled([
       niftyApi.getImpact(),
+      niftyApi.getLatest(),
       aiSignalApi.getLatest(),
       niftyApi.getImpact(),
       niftyApi.getSectorHeatmap(),
+      protectedApi.getFreeMessage(),
     ]);
 
     setData((prev) => {
@@ -64,6 +75,10 @@ export const DashboardPage = () => {
 
       if (impactResult.status === 'fulfilled') {
         next.niftyImpact = impactResult.value?.total_impact ?? null;
+      }
+
+      if (latestResult.status === 'fulfilled') {
+        next.latestPrice = latestResult.value?.price ?? null;
       }
 
       if (aiSignalResult.status === 'fulfilled') {
@@ -79,14 +94,25 @@ export const DashboardPage = () => {
         next.sectors = Object.entries(sectorsResult.value ?? {}).map(([name, score]) => ({ name, score }));
       }
 
+      if (freeResult.status === 'fulfilled') {
+        next.greeting = freeResult.value?.message || '';
+      }
+
       return next;
     });
 
+    const results = [impactResult, latestResult, aiSignalResult, draggersResult, sectorsResult, freeResult];
+    if (results.every((result) => result.status === 'rejected')) {
+      setError('Unable to load dashboard data right now.');
+    }
+
     setLoading({
       niftyImpact: false,
+      latest: false,
       aiSignal: false,
       draggers: false,
       sectors: false,
+      greeting: false,
     });
   }, []);
 
@@ -109,6 +135,28 @@ export const DashboardPage = () => {
 
   return (
     <section className="dashboard-grid">
+      {error ? (
+        <article className="panel" style={{ gridColumn: 'span 12' }}>
+          <p className="error-text">{error}</p>
+        </article>
+      ) : null}
+      {!loading.greeting && data.greeting ? (
+        <article className="panel" style={{ gridColumn: 'span 12' }}>
+          <p>{data.greeting}</p>
+        </article>
+      ) : null}
+
+      {loading.latest ? (
+        <SkeletonCard />
+      ) : (
+        <MetricCard
+          title="Nifty Last Price"
+          value={data.latestPrice === null ? 'N/A' : data.latestPrice}
+          tone="neutral"
+          hint="Latest market snapshot"
+        />
+      )}
+
       {loading.niftyImpact ? (
         <SkeletonCard />
       ) : (
@@ -132,9 +180,7 @@ export const DashboardPage = () => {
       )}
 
       {loading.aiSignal ? <SkeletonPanel title="AI Strength Meter" /> : <StrengthMeter value={data.aiStrength ?? 0} />}
-
       {loading.draggers ? <SkeletonPanel title="Top 5 Draggers" /> : <DraggersList items={data.draggers} />}
-
       {loading.sectors ? <SkeletonPanel title="Sector Heatmap" /> : <SectorHeatmap sectors={data.sectors} />}
     </section>
   );
