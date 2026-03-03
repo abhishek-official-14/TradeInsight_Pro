@@ -4,6 +4,7 @@ import { AdminPanelPage } from '../pages/AdminPanelPage';
 import { AdminSubscriptionsPage } from '../pages/AdminSubscriptionsPage';
 import { ApiUsageLogsPage } from '../pages/ApiUsageLogsPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { DesignSystemPage } from '../pages/DesignSystemPage';
 import { FeatureFlagsPage } from '../pages/FeatureFlagsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { OptionAnalysisPage } from '../pages/OptionAnalysisPage';
@@ -19,6 +20,7 @@ export const AppRoutes = () => (
     <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
+    <Route path="/design-system" element={<DesignSystemPage />} />
 
     <Route element={<ProtectedRoute />}>
       <Route element={<AppLayout />}>

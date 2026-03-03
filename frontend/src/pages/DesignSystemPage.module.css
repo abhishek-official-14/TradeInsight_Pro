@@ -1,0 +1,236 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7eb2ff;
+  font-size: 0.75rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+.section {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.surface,
+.featureCard,
+.colorCard,
+.gridItem,
+.modal {
+  background: linear-gradient(170deg, #101a2b, #0c1423);
+  border: 1px solid #223754;
+  border-radius: 14px;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
+}
+
+.colorCard {
+  padding: 0.8rem;
+}
+
+.swatch {
+  height: 60px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.colorCard h3 {
+  margin: 0.7rem 0 0.2rem;
+  font-size: 0.95rem;
+}
+
+.colorCard code {
+  color: #93a7c7;
+}
+
+.typographyWrap {
+  padding: 0.5rem 0.9rem;
+}
+
+.typeRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  border-bottom: 1px solid #21344f;
+}
+
+.typeRow:last-child {
+  border-bottom: 0;
+}
+
+.featureCard {
+  padding: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.kpiLabel {
+  color: #93a7c7;
+  margin: 0;
+}
+
+.featureCard h3 {
+  margin: 0.3rem 0;
+  font-size: 2rem;
+}
+
+.positive {
+  color: #24d18a;
+}
+
+.negative {
+  color: #ff647c;
+}
+
+.textButton {
+  border: 0;
+  background: transparent;
+  color: #7eb2ff;
+  padding: 0;
+}
+
+.buttonRow,
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.btnPrimary,
+.btnSecondary,
+.btnGhost,
+.btnDanger {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #1ea7fd, #4f7bff);
+  color: #fff;
+}
+
+.btnSecondary {
+  background: #172740;
+  border-color: #2a4a73;
+  color: #d4e4ff;
+}
+
+.btnGhost {
+  background: transparent;
+  border-color: #2a4a73;
+  color: #aac8f4;
+}
+
+.btnDanger {
+  background: rgba(255, 100, 124, 0.2);
+  border-color: rgba(255, 100, 124, 0.5);
+  color: #ffb4c1;
+}
+
+.badge {
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid transparent;
+}
+
+.badgeInfo {
+  color: #9fd4ff;
+  background: rgba(30, 167, 253, 0.18);
+  border-color: rgba(30, 167, 253, 0.4);
+}
+
+.badgeSuccess {
+  color: #8df2c5;
+  background: rgba(36, 209, 138, 0.15);
+  border-color: rgba(36, 209, 138, 0.35);
+}
+
+.badgeWarning {
+  color: #ffd893;
+  background: rgba(255, 190, 85, 0.16);
+  border-color: rgba(255, 190, 85, 0.4);
+}
+
+.badgeDanger {
+  color: #ffb4c1;
+  background: rgba(255, 100, 124, 0.15);
+  border-color: rgba(255, 100, 124, 0.4);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #223754;
+}
+
+.modalBackdrop {
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(4, 9, 18, 0.75);
+  border: 1px dashed #284369;
+}
+
+.modal {
+  max-width: 500px;
+  padding: 1rem;
+  box-shadow: 0 20px 50px rgba(2, 6, 15, 0.5);
+}
+
+.modal h3 {
+  margin-top: 0;
+}
+
+.modal p {
+  color: #a5bbde;
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.gridItem {
+  grid-column: span 4;
+  padding: 0.9rem;
+  text-align: center;
+  color: #c3d7f7;
+}
+
+.gridSpan8 {
+  grid-column: span 8;
+}
+
+.gridSpan4 {
+  grid-column: span 4;
+}
+
+@media (max-width: 900px) {
+  .gridItem,
+  .gridSpan8,
+  .gridSpan4 {
+    grid-column: span 12;
+  }
+}
