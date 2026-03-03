@@ -1,0 +1,7 @@
+.fullWidth {
+  grid-column: span 12;
+}
+
+.halfWidth {
+  grid-column: span 6;
+}

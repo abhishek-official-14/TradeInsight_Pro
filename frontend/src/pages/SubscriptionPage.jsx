@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { subscriptionApi } from '../api/subscriptionApi';
 import { useAuth } from '../context/AuthContext';
 import { openRazorpayCheckout } from '../utils/razorpay';
+import styles from './SubscriptionPage.module.css';
 
 const PRO_PLAN = {
   id: 'pro-monthly',
@@ -80,8 +81,8 @@ export const SubscriptionPage = () => {
         Current role: <strong>{user?.role || 'free'}</strong>
       </p>
 
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, marginTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>{PRO_PLAN.name}</h3>
+      <div className={styles.planCard}>
+        <h3>{PRO_PLAN.name}</h3>
         <p>{PRO_PLAN.description}</p>
         <p>
           Price: <strong>{formatPrice(PRO_PLAN.amountInPaise, PRO_PLAN.currency)}</strong> / {PRO_PLAN.interval}
@@ -92,9 +93,9 @@ export const SubscriptionPage = () => {
         </button>
       </div>
 
-      {message ? <p style={{ marginTop: 12 }}>{message}</p> : null}
+      {message ? <p className={styles.status}>{message}</p> : null}
       {error ? (
-        <p style={{ marginTop: 12, color: '#b42318' }}>
+        <p className={styles.error}>
           <strong>Error:</strong> {error}
         </p>
       ) : null}

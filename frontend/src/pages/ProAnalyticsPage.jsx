@@ -3,6 +3,7 @@ import { aiSignalApi } from '../api/aiSignalApi';
 import { optionsApi } from '../api/optionsApi';
 import { protectedApi } from '../api/protectedApi';
 import { MetricCard } from '../components/MetricCard';
+import styles from './ProAnalyticsPage.module.css';
 
 export const ProAnalyticsPage = () => {
   const [data, setData] = useState({
@@ -41,7 +42,7 @@ export const ProAnalyticsPage = () => {
 
   return (
     <section className="dashboard-grid">
-      <div className="panel" style={{ gridColumn: 'span 12' }}>
+      <div className={`panel ${styles.fullWidth}`}>
         <div className="panel-head">
           <h2>Pro Analytics</h2>
           <span className="metric-hint">Advanced options intelligence</span>
@@ -72,7 +73,7 @@ export const ProAnalyticsPage = () => {
             hint={`Expiry ${data.analytics?.expiry_date || 'N/A'}`}
           />
 
-          <div className="panel" style={{ gridColumn: 'span 6' }}>
+          <div className={`panel ${styles.halfWidth}`}>
             <h3>Support vs Resistance</h3>
             <p>
               Strongest Support: <strong>{data.analytics?.strongest_support ?? '—'}</strong>
@@ -82,7 +83,7 @@ export const ProAnalyticsPage = () => {
             </p>
           </div>
 
-          <div className="panel" style={{ gridColumn: 'span 6' }}>
+          <div className={`panel ${styles.halfWidth}`}>
             <h3>Open Interest Change</h3>
             <p>
               Call OI Change: <strong>{data.analytics?.change_in_call_oi ?? '—'}</strong>

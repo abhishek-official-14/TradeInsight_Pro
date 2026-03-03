@@ -1,0 +1,10 @@
+.fullWidth {
+  grid-column: span 12;
+}
+
+.skeletonBlock {
+  width: 55%;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}

@@ -1,0 +1,15 @@
+.container {
+  max-width: 680px;
+}
+
+.form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.input {
+  background: #0f1a2d;
+  color: var(--text);
+  border-color: #1b355f;
+}

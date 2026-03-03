@@ -1,0 +1,20 @@
+.planCard {
+  border: 1px solid #e5e7eb33;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  background: linear-gradient(170deg, #0d1729, #0b1220);
+}
+
+.planCard h3 {
+  margin-top: 0;
+}
+
+.status {
+  margin-top: 12px;
+}
+
+.error {
+  margin-top: 12px;
+  color: #b42318;
+}
